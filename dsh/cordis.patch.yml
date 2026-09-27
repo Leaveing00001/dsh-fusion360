@@ -1,0 +1,50 @@
+# Fusion 360 bridge for DSH - profile patch entry.
+#
+# This is a dsh profile "patch layer" entry: a top-level YAML array of loader
+# patch entries.  The `insert` list appends rows to the profile's plugin tree.
+# `name` names the DSH package to instantiate; `config` is handed to it.
+#
+# The mcp-client package exposes each tool of the server as
+# mcp__<serverName>__<tool>, so these end up as mcp__fusion360__fusion_status,
+# mcp__fusion360__fusion_run_python, and so on.
+#
+# ---------------------------------------------------------------------------
+# BEFORE USE - edit the three marked paths below to match your machine:
+#
+#   command   absolute path to a Python 3.8+ interpreter
+#   args[0]   absolute path to mcp_server/fusion_mcp_server.py in this repo
+#   cwd       absolute path to this repo
+#
+# Windows paths in YAML single quotes need no escaping, so
+# 'C:\Users\me\repo' is fine as-is.
+# ---------------------------------------------------------------------------
+#
+# Install: append this block to
+#   %USERPROFILE%\.dsh\profiles\desktop\cordis.patch.yml
+# then restart DSH.  A newly added row is NOT hot-loaded, even with
+# patchReload: live - the plugin tree is read at startup.
+#
+#   python tools\restart_dsh.py
+
+- insert:
+    - id: mcp-fusion360
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: fusion360
+        transport: stdio
+        # EDIT ME
+        command: 'C:\Path\To\Python\python.exe'
+        args:
+          # EDIT ME
+          - 'C:\Path\To\dsh-fusion360\mcp_server\fusion_mcp_server.py'
+        # EDIT ME
+        cwd: 'C:\Path\To\dsh-fusion360'
+        env:
+          FUSION_DSH_BRIDGE_HOST: '127.0.0.1'
+          FUSION_DSH_BRIDGE_PORT: '27182'
+        # Modelling calls are slow, and the first call after a cold start has
+        # been measured at ~24 s.  The default would time out.
+        toolCallTimeoutMs: 120000
+        # Leave false so a Fusion-less start still boots DSH; the tools simply
+        # report that the bridge is unreachable until Fusion and the add-in run.
+        failOnStartupError: false

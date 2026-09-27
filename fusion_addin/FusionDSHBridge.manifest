@@ -1,0 +1,13 @@
+{
+	"autodeskProduct":	"Fusion",
+	"type":	"addin",
+	"id":	"8f2a4c61-3d7e-4b19-9a05-c7e6b2d84f30",
+	"author":	"DSH",
+	"description":	{
+		"":	"Fusion DSH Bridge - a loopback command endpoint that lets the DeepSeek Harness (DSH) drive Fusion 360 through its API."
+	},
+	"version":	"1.0.0",
+	"runOnStartup":	false,
+	"supportedOS":	"windows|mac",
+	"editEnabled":	true
+}

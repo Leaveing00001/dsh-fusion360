@@ -1,0 +1,36 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# --- Fusion add-in runtime ---
+# The add-in writes these next to its own source when installed.
+bridge.log
+*.log
+
+# --- Local verification output ---
+verify_out/
+*.step
+*.stp
+*.stl
+*.iges
+*.igs
+*.obj
+*.f3d
+*.smt
+*.sat
+
+# --- Vendored reference material ---
+# app.asar extractions, type-stub copies, downloaded packages: useful locally,
+# never part of the project.
+ref/
+node_modules/
+*.asar
+
+# --- Editors / OS ---
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini

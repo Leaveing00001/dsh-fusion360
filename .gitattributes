@@ -1,0 +1,22 @@
+# Normalise line endings: the add-in and MCP server must stay LF so the same
+# file works on Windows and macOS.
+* text=auto eol=lf
+
+*.py   text eol=lf
+*.yml  text eol=lf
+*.json text eol=lf
+*.md   text eol=lf
+
+# PowerShell scripts and the Windows launcher are consumed by Windows tooling.
+*.ps1  text eol=crlf
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+
+# Fusion's manifest is parsed as JSON and must carry no BOM. Marking it binary
+# stops git from ever rewriting it.
+*.manifest -text
+
+*.png binary
+*.jpg binary
+*.stl binary
+*.step binary
