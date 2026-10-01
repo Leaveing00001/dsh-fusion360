@@ -3,7 +3,7 @@
 **Drive Autodesk Fusion 360 from DeepSeek Harness.** Query the model, change
 parameters, export files, and run arbitrary Fusion API Python — from a chat.
 
-[中文说明](README.zh-CN.md) · [Install](docs/install.md) · [Verification](docs/verification.md) · [Fusion API notes](docs/fusion-api-notes.md)
+[中文说明](README.zh-CN.md) · [Install](docs/install.md) · [Verification](docs/verification.md) · [Fusion API notes](docs/fusion-api-notes.md) · [DSH compatibility](docs/dsh-compatibility.md)
 
 ---
 
@@ -16,15 +16,15 @@ parameters, export files, and run arbitrary Fusion API Python — from a chat.
 >
 > Concretely, the agent:
 >
-> - read DSH's own `app.asar` and Fusion's shipped Python type stubs to learn the
->   two APIs instead of trusting its memory of them;
+> - read DSH's own installed application tree and Fusion's shipped Python type
+>   stubs to learn the two APIs instead of trusting its memory of them;
 > - wrote the Fusion add-in, the MCP server, and three test harnesses;
 > - installed the add-in into Fusion, restarted DSH, and then called its own tools
 >   back through the MCP layer;
 > - drove **15 modelling commands** against real Fusion and checked each result
 >   against its closed-form volume, rather than settling for "the call did not
 >   raise" — see [the measured table](docs/verification.md);
-> - hit **16 places where its recall of the Fusion API disagreed with reality**,
+> - hit **17 places where its recall of the Fusion API disagreed with reality**,
 >   and corrected every one from the actual error text. Those are written up in
 >   [Fusion API notes](docs/fusion-api-notes.md).
 >
@@ -58,6 +58,15 @@ The MCP server runs as an ordinary DSH-spawned subprocess. The add-in runs
 *inside* Fusion, joins the socket requests back onto Fusion's primary thread with
 a `CustomEvent`, and executes them there.
 
+## Requirements
+
+| | |
+|---|---|
+| Fusion 360 | A desktop install that can run add-ins — verified on **2705.1.15**. Fusion has no headless mode, so nothing here works without the app running. |
+| DSH Desktop | Verified on **2.0.17** (2.0.9 also worked). See [DSH compatibility](docs/dsh-compatibility.md). |
+| Python | 3.8+ for the MCP server. **Standard library only** — no `mcp` wheel, no `pip install`. |
+| OS | Windows, verified. The bridge itself is plain stdlib and the manifest declares `windows\|mac`, but nothing here has been run on macOS. The helpers in `tools/` are PowerShell and `.bat`, so those are Windows-only. |
+
 ## Quick start
 
 ```powershell
@@ -72,6 +81,15 @@ python tools\restart_dsh.py
 
 # 4. Start Fusion 360, then verify
 ```
+
+> **The install is two-part and `npm` cannot complete it.** `package.json`
+> declares `dsh.bundle.patch` — the DSH-side half, which is the cordis patch in
+> [`dsh/cordis.patch.yml`](dsh/cordis.patch.yml) — but the other half is an add-in
+> that has to be copied into *Fusion's* AddIns folder, which no package manager
+> can do for you. There is deliberately no `postinstall` script reaching into
+> another application's directories; the two commands above are the install. The
+> npm manifest exists so plugin catalogs can identify this repo, which is why it
+> is marked `"private": true` and not published.
 
 Ask DSH to call `mcp__fusion360__fusion_status`. A healthy reply:
 
@@ -188,7 +206,7 @@ Fusion renames and removes API members between releases, and the failures are
 - **`Face.geometry.normal` does not tell top from bottom.** Both planar faces of
   a plate can report `+Z` — it describes the underlying surface, not the face.
 
-All sixteen are in **[docs/fusion-api-notes.md](docs/fusion-api-notes.md)**, each
+All seventeen are in **[docs/fusion-api-notes.md](docs/fusion-api-notes.md)**, each
 with the error text it produces and the fix.
 
 ## Layout
@@ -198,7 +216,8 @@ with the error text it produces and the fix.
 | `fusion_addin/` | The add-in that runs **inside** Fusion 360 |
 | `mcp_server/fusion_mcp_server.py` | MCP server DSH spawns; standard library only |
 | `dsh/cordis.patch.yml` | The profile patch entry that registers it with DSH |
-| `docs/` | Install guide, measurements, Fusion API notes |
+| `package.json` | Declares `dsh.bundle.patch` and names this repo's DSH-side artifact |
+| `docs/` | Install guide, measurements, Fusion API notes, DSH compatibility |
 | `examples/` | A commented part build you can run as-is |
 | `tools/` | Tests, probes, installer, DSH restart helper |
 

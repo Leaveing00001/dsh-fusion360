@@ -14,9 +14,10 @@ Expected, and measured on Fusion 2705.1.15:
     after four R6 rounds      47752.78 mm^3     (-247.22)
     after four ⌀4.5 holes     47243.84 mm^3     (-508.94)
 
-`fusion_run_python` pre-binds `adsk`, `app`, `ui`, `design` and `root`; the
-imports below are there so the file also runs as a plain script inside Fusion's
-own Python console.
+`fusion_run_python` pre-binds `adsk`, `app`, `ui`, `design` and `root`. Fusion's
+own Python console and a plain interpreter bind none of them, so this file
+resolves `app` and `design` for itself (see "context" below) and runs unchanged
+in all three. It needs an open design document.
 
     UNITS: the Fusion API is centimetres and radians. Every length below is
     converted with MM() on the way in. Nothing else in this file is in mm.
@@ -24,6 +25,28 @@ own Python console.
 
 import adsk.core
 import adsk.fusion
+
+# --------------------------------------------------------------------------
+# context
+#
+# Do not assume the bridge's globals exist. Binding these here is what makes
+# the file runnable from `fusion_run_python`, from Fusion's own Python console,
+# and from a plain interpreter alike.
+# --------------------------------------------------------------------------
+
+try:
+    app
+except NameError:                       # console or plain interpreter
+    app = adsk.core.Application.get()
+
+try:
+    design
+except NameError:
+    _document = app.activeDocument
+    design = (
+        _document.products.itemByProductType('DesignProductType')
+        if _document is not None else None
+    )
 
 # --------------------------------------------------------------------------
 # parameters (millimetres)

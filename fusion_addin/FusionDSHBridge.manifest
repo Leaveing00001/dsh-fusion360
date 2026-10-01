@@ -6,7 +6,7 @@
 	"description":	{
 		"":	"Fusion DSH Bridge - a loopback command endpoint that lets the DeepSeek Harness (DSH) drive Fusion 360 through its API."
 	},
-	"version":	"1.0.0",
+	"version":	"1.0.3",
 	"runOnStartup":	false,
 	"supportedOS":	"windows|mac",
 	"editEnabled":	true

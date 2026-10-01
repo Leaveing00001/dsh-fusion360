@@ -3,7 +3,7 @@
 **用 DeepSeek Harness 驱动 Autodesk Fusion 360。** 在对话里查询模型、改参数、
 导出文件、执行任意 Fusion API Python。
 
-[English](README.md) · [安装](docs/install.md) · [实测数据](docs/verification.md) · [Fusion API 避坑](docs/fusion-api-notes.md)
+[English](README.md) · [安装](docs/install.md) · [实测数据](docs/verification.md) · [Fusion API 避坑](docs/fusion-api-notes.md) · [DSH 兼容性](docs/dsh-compatibility.md)
 
 ---
 
@@ -15,13 +15,13 @@
 >
 > 具体来说，agent 做了这些：
 >
-> - 读了 DSH 自己的 `app.asar` 和 Fusion 自带的 Python 类型存根来学习这两套
+> - 读了 DSH 自己安装好的应用目录和 Fusion 自带的 Python 类型存根来学习这两套
 >   API，而不是凭记忆下笔；
 > - 写了 Fusion 插件、MCP 服务器，以及三套测试；
 > - 把插件装进 Fusion、重启 DSH，然后**通过 MCP 层回头调用自己的工具**；
 > - 在真实 Fusion 上驱动了 **15 个建模命令**，每一个都拿闭式解体积对账，而不是
 >   满足于「调用没报错」——见[实测表](docs/verification.md)；
-> - 撞上 **16 处「记忆里的 API 和现实不符」**，每一处都是照着真实报错改的。全部
+> - 撞上 **17 处「记忆里的 API 和现实不符」**，每一处都是照着真实报错改的。全部
 >   写在 [Fusion API 避坑](docs/fusion-api-notes.md) 里。
 >
 > 错误是写下来而不是藏起来的，因为那才是有用的部分：它们里面**大多数在 Fusion
@@ -50,6 +50,15 @@ Python」的普通 MCP 服务器是行不通的。这是一座两段式桥：
 MCP 服务器是 DSH 拉起的普通子进程。插件跑在 Fusion **内部**，用 `CustomEvent`
 把 socket 请求交回 Fusion 主线程，在那里执行。
 
+## 环境要求
+
+| | |
+|---|---|
+| Fusion 360 | 能加载插件的桌面版 —— 实测于 **2705.1.15**。Fusion 没有无头模式，程序不运行则这里的一切都不工作。 |
+| DSH Desktop | 实测于 **2.0.17**（2.0.9 也可用）。见 [DSH 兼容性](docs/dsh-compatibility.md)。 |
+| Python | 3.8+，给 MCP 服务器用。**只用标准库** —— 不需要 `mcp` 包，不需要 `pip install`。 |
+| 操作系统 | Windows 已验证。桥本身是纯标准库，manifest 也声明了 `windows\|mac`，但没有在 macOS 上跑过。`tools/` 里的辅助脚本是 PowerShell 和 `.bat`，那部分是 Windows 专用。 |
+
 ## 快速开始
 
 ```powershell
@@ -64,6 +73,13 @@ python tools\restart_dsh.py
 
 # 4. 启动 Fusion 360，然后验证
 ```
+
+> **安装分两步，`npm` 装不完。** `package.json` 声明了 `dsh.bundle.patch`，那是
+> DSH 这一半，也就是 [`dsh/cordis.patch.yml`](dsh/cordis.patch.yml) 里那条 cordis
+> 补丁；另一半是要拷进 **Fusion 的** AddIns 目录的插件，任何包管理器都替你做不了。
+> 这里**刻意没有** `postinstall` 去伸手改别的应用的目录——上面两条命令就是安装过程。
+> npm 清单的存在只是为了让插件目录能识别这个仓库，所以它标了 `"private": true`，
+> 也不发布。
 
 让 DSH 调用 `mcp__fusion360__fusion_status`。正常的返回：
 
@@ -170,7 +186,7 @@ Fusion 会在版本之间改名和删成员，而且失败是**静默**的。这
 - **`Face.geometry.normal` 分不出顶面和底面。** 一块板的两个平面都可能报 `+Z`
   ——它描述的是底层曲面，不是面的朝向。
 
-16 条全部在 **[docs/fusion-api-notes.md](docs/fusion-api-notes.md)**，每条都附了它
+17 条全部在 **[docs/fusion-api-notes.md](docs/fusion-api-notes.md)**，每条都附了它
 产生的报错原文和修法。
 
 ## 目录
@@ -180,7 +196,8 @@ Fusion 会在版本之间改名和删成员，而且失败是**静默**的。这
 | `fusion_addin/` | 跑在 Fusion 360 **内部**的插件 |
 | `mcp_server/fusion_mcp_server.py` | DSH 拉起的 MCP 服务器；仅标准库 |
 | `dsh/cordis.patch.yml` | 把它注册进 DSH 的 profile patch 条目 |
-| `docs/` | 安装指南、实测数据、Fusion API 避坑 |
+| `package.json` | 声明 `dsh.bundle.patch`，指明本仓库 DSH 这一半的产物 |
+| `docs/` | 安装指南、实测数据、Fusion API 避坑、DSH 兼容性 |
 | `examples/` | 一个带注释、可直接跑的零件建模示例 |
 | `tools/` | 测试、探针、安装器、DSH 重启助手 |
 

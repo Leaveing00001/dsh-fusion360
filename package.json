@@ -1,0 +1,32 @@
+{
+  "name": "dsh-fusion360",
+  "version": "1.0.3",
+  "private": true,
+  "description": "Drive Autodesk Fusion 360 from DeepSeek Harness: a Fusion 360 add-in plus a dependency-free MCP server exposing 13 mcp__fusion360__* tools. The DSH-side half of the install is the cordis patch declared below; the other half is a Fusion add-in, which npm cannot install. See the repository README.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Leaveing00001/dsh-fusion360.git"
+  },
+  "homepage": "https://github.com/Leaveing00001/dsh-fusion360#readme",
+  "bugs": {
+    "url": "https://github.com/Leaveing00001/dsh-fusion360/issues"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "mcp",
+    "mcp-server",
+    "fusion360",
+    "autodesk",
+    "cad",
+    "parametric-modeling",
+    "vibecoding"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./dsh/cordis.patch.yml"
+    }
+  }
+}

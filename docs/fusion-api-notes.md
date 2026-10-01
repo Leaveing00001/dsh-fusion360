@@ -1,12 +1,16 @@
 # Fusion API notes
 
-Sixteen things that cost real time while building this bridge.
+Seventeen things that cost real time while building this bridge.
 
 They are collected because of a shared property: **most of them fail silently.**
 Fusion's API will happily create a feature that does nothing, or hand you a
 profile you did not ask for, without raising. The only defence that worked here
 was to check every signature against `__doc__` at runtime and to verify results by
 measuring geometry, rather than trusting either recall or a clean return value.
+
+The numbers are the order they were hit, not the order they appear — which is why
+the last one sits back up in an earlier section. Cross-references between entries
+use those numbers.
 
 The authoritative reference for *your* installed version is the stub package
 Fusion ships:
@@ -26,6 +30,41 @@ recall and that directory disagreed.
 units. A 60 mm plate is `6.0`. This is not a gotcha that produces an error — it
 produces a plate 10× too big. Read-only tools in this repo convert to millimetres;
 `fusion_run_python` does not.
+
+### 17. Reading the document's *display* units takes three hops
+
+Found while auditing the DSH upgrade, not while modelling — hence the number.
+
+If you want to report the units the user sees, the obvious guess
+`app.preferences.defaultUnits` does not exist, and neither does
+`app.preferences.defaultUnitsPreferences.item(0).lengthUnits`:
+
+```
+>>> app.preferences.defaultUnits
+AttributeError: 'Preferences' object has no attribute 'defaultUnits'
+
+>>> app.preferences.defaultUnitsPreferences.item(0).lengthUnits
+AttributeError: 'FusionDefaultUnitsPreferences' object has no attribute 'lengthUnits'
+```
+
+The real path is a collection, one entry per Autodesk product, and the member is
+named `distanceDisplayUnits`:
+
+```python
+prefs = app.preferences.defaultUnitsPreferences
+entry = prefs.item(0)                      # FusionDefaultUnitsPreferences
+entry.distanceDisplayUnits                 # -> 'MillimeterDistanceUnits'
+```
+
+`itemByProductType` is *not* available here — this is a flat collection indexed
+by position, unlike `Document.products`. Also note `defaultUnitSystem` lives on
+`adsk.fusion.FusionUnitsManager`, not on this object, and
+`UnitsManager.defaultLengthUnits` (returning a plain string such as `'mm'`) is a
+third, different thing again.
+
+**Why it does not matter for modelling:** none of these change the centimetres
+the API takes and returns. Confirm the three-hop path with `dir()` rather than
+recalling it, exactly as with everything else in this file.
 
 ---
 

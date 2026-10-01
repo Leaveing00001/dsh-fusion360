@@ -21,10 +21,28 @@ import sys
 import traceback
 
 SERVER_NAME = 'fusion360'
-SERVER_VERSION = '1.0.0'
+SERVER_VERSION = '1.0.3'
 
-# Mirrors the versions @modelcontextprotocol/sdk 1.30.0 accepts, so whichever
-# one DSH asks for is echoed back unchanged.
+# Sent in the `initialize` result.  DSH's mcp-client (0.2.0-rc.2) appends this
+# to the agent's system prompt as "### MCP server: fusion360", which is the only
+# place the server gets to explain itself before a tool is called.  Without it
+# the agent sees 13 tools and no hint that a desktop app has to be running.
+SERVER_INSTRUCTIONS = (
+    'Drives the Autodesk Fusion 360 desktop application through its Python API. '
+    'Fusion must be running with the FusionDSHBridge add-in loaded; every call '
+    'goes over a loopback socket to that add-in and runs on Fusion\'s primary '
+    'thread, so calls are serialised and a cold one can take ~25 s. '
+    'Prefer the named tools. fusion_run_python is the escape hatch: its code runs '
+    'with adsk, app, ui, design and root pre-bound, and Fusion\'s API is in '
+    'CENTIMETRES and RADIANS regardless of the document\'s display units. '
+    'Most tools operate on the active design document.'
+)
+
+# Verified byte-for-byte against protocol constants in
+# @modelcontextprotocol/core 2.0.0 (the client DSH Desktop 2.0.17 ships):
+#   LATEST_PROTOCOL_VERSION = '2025-11-25'
+#   DEFAULT_NEGOTIATED_PROTOCOL_VERSION = '2025-03-26'
+# Our fallback intentionally equals DEFAULT_NEGOTIATED_PROTOCOL_VERSION.
 SUPPORTED_PROTOCOL_VERSIONS = (
     '2025-11-25',
     '2025-06-18',
@@ -408,6 +426,7 @@ def serve(bridge, stdin=None, stdout=None):
                     'protocolVersion': _negotiate_version(params),
                     'capabilities': {'tools': {'listChanged': False}},
                     'serverInfo': {'name': SERVER_NAME, 'version': SERVER_VERSION},
+                    'instructions': SERVER_INSTRUCTIONS,
                 })
             elif method == 'ping':
                 response = _result(request_id, {})
